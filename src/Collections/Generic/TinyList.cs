@@ -25,7 +25,8 @@ public struct TinyList<T> : IReadOnlyCollection<T>
 
 	public Span<T> Span
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _buffer is null ? MemoryMarshal.CreateSpan(ref _ray.Value, _count) : new Span<T>(_buffer, 0, _count);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => _buffer is null ? MemoryMarshal.CreateSpan(ref _ray.Value, _count) : new Span<T>(_buffer, 0, _count);
 	}
 
 	public int Count => _count;
@@ -106,9 +107,10 @@ public struct TinyList<T> : IReadOnlyCollection<T>
 	/// <exception cref="IndexOutOfRangeException">If list is empty.</exception>
 	public ref T Pop()
 	{
-		ref var res = ref Last;
-		_count--;
-		return ref res;
+		var index = --_count;
+		if (index >= 0) return ref _buffer is null ? ref MemoryMarshal.CreateSpan(ref _ray.Value, _count)[index] : ref _buffer[index];
+		_count = 0;
+		throw new IndexOutOfRangeException();
 	}
 
 	/// <summary>
