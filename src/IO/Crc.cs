@@ -1,4 +1,4 @@
-﻿namespace System;
+﻿namespace System.IO;
 
 using Runtime.CompilerServices;
 using Runtime.InteropServices;

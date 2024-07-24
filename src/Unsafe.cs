@@ -3,14 +3,14 @@
 using Runtime.CompilerServices;
 using Runtime.InteropServices;
 
-internal ref struct Unsafe<T> where T : struct
+public ref struct Unsafe<T> where T : struct
 {
 	public ref T Value;
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public uint SizeOf() => unchecked((uint)Unsafe.SizeOf<T>());
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	//public Unsafe(ref T @ref) => Value = ref @ref;
 	public Unsafe(scoped ref readonly T @ref) => Value = ref Unsafe.AsRef(in @ref);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -23,12 +23,15 @@ internal ref struct Unsafe<T> where T : struct
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Unsafe(nint pointer, int byteOffset)
+	public Unsafe(T[] array)
 	{
-		unsafe
-		{
-			Value = ref Unsafe.As<byte, T>(ref *((byte*)pointer + byteOffset));
-		}
+		Value = ref MemoryMarshal.GetArrayDataReference(array);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public Unsafe(T[] array, uint offset)
+	{
+		Value = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), offset);
 	}
 
 	public ref T this[int offset]
@@ -49,11 +52,6 @@ internal ref struct Unsafe<T> where T : struct
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public ref TResult CastThis<TResult>(uint index) where TResult : struct => ref Unsafe.As<T, TResult>(ref Unsafe.Add(ref Value, index));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public ref (uint next, uint prev) GetAdjes(uint index) => ref Unsafe.As<T, (uint next, uint prev)>(ref Unsafe.Add(ref Value, index));
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public ref (uint next, uint prev) GetAdjes(uint index, uint offset) => ref Unsafe.Add(ref Unsafe.As<T, (uint next, uint prev)>(ref Unsafe.Add(ref Value, index)), offset);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Span<T> CreateSpan(int start, int length) => MemoryMarshal.CreateSpan(ref Unsafe.Add(ref Value, start), length);

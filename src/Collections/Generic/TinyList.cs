@@ -9,7 +9,7 @@ using Runtime.InteropServices;
 [StructLayout(LayoutKind.Sequential)]
 public struct TinyList<T> : IReadOnlyCollection<T>
 {
-	private const int Capacity = 16;
+	private const int Capacity = 8;
 
 	private int _count;
 	private T[]? _buffer;

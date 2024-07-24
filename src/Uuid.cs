@@ -60,37 +60,39 @@ public readonly struct Uuid : IEquatable<Uuid>, IComparable<Uuid>
 	{
 		Span<char> span = stackalloc char[44];
 		Unsafe<byte> uuid = new(in _0);
-	
+
 		Unsafe<char> x = span;
 		x.Append(('(', '0', 'x'));
 		for (int i = 7, b, v; i > -1; i--) x.Append(((char)(((v = (b = uuid[i]) >> 4) > 9 ? 55 : 48) + v), (char)(((v = b & 15) > 9 ? 55 : 48) + v)));
 		x.Append(('U', 'L', ',', ' ', '0', 'x'));
 		for (int i = 15, b, v; i > 7; i--) x.Append(((char)(((v = (b = uuid[i]) >> 4) > 9 ? 55 : 48) + v), (char)(((v = b & 15) > 9 ? 55 : 48) + v)));
 		x.Append(('U', 'L', ')'));
-	
+
 		return simple ? new(span[1..^1]) : new(span);
 	}
+
 	public string ToJavaScriptString(bool simple)
 	{
 		Span<char> span = stackalloc char[42];
 		Unsafe<byte> uuid = new(in _0);
-	
+
 		Unsafe<char> x = span;
 		x.Append(('(', '0', 'x'));
 		for (int i = 7, b, v; i > -1; i--) x.Append(((char)(((v = (b = uuid[i]) >> 4) > 9 ? 55 : 48) + v), (char)(((v = b & 15) > 9 ? 55 : 48) + v)));
 		x.Append(('n', ',', ' ', '0', 'x'));
 		for (int i = 15, b, v; i > 7; i--) x.Append(((char)(((v = (b = uuid[i]) >> 4) > 9 ? 55 : 48) + v), (char)(((v = b & 15) > 9 ? 55 : 48) + v)));
 		x.Append(('n', ')'));
-	
+
 		return simple ? new(span[1..^1]) : new(span);
 	}
-	
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Uuid NewUuid() => Unsafe.BitCast<Guid, Uuid>(Guid.NewGuid());
 
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator Uuid((ulong lo, ulong hi) tuple) => Unsafe.As<(ulong, ulong), Uuid>(ref tuple);
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator Uuid(Guid guid) => Unsafe.As<Guid, Uuid>(ref guid);
 
@@ -131,6 +133,22 @@ public readonly struct Uuid : IEquatable<Uuid>, IComparable<Uuid>
 
 		for (Uuid comparand; lo <= hi;)
 			if (value.Hi == (comparand = Unsafe.Add(ref values, offset = unchecked((int)(((uint)hi + (uint)lo) >> 1)))).Hi)
+				if (value.Lo == comparand.Lo) return offset;
+				else if (value.Lo > comparand.Lo) lo = offset + 1;
+				else hi = offset - 1;
+			else if (value.Hi > comparand.Hi) lo = offset + 1;
+			else hi = offset - 1;
+
+		return ~lo;
+	}
+
+	public static int UnsafeBinarySearch(ReadOnlySpan<Uuid> source, Uuid value)
+	{
+		Unsafe<Uuid> values = source;
+		int lo = 0, hi = (source.Length >> 1) - 1, offset;
+
+		for (Uuid comparand; lo <= hi;)
+			if (value.Hi == (comparand = values[offset = unchecked((int)(((uint)hi + (uint)lo) >> 1))]).Hi)
 				if (value.Lo == comparand.Lo) return offset;
 				else if (value.Lo > comparand.Lo) lo = offset + 1;
 				else hi = offset - 1;

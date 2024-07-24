@@ -82,7 +82,7 @@ internal struct OptionalList<T> : IReadOnlyCollection<T>
 		var index = _count++;
 
 		if (_buffer is null) _buffer = new T[MinCapacity];
-		else if (_buffer.Length >= index) Array.Resize(ref _buffer, index + MinCapacity);
+		else if (_buffer.Length <= index) Array.Resize(ref _buffer, index + MinCapacity);
 		return ref _buffer[index];
 	}
 
